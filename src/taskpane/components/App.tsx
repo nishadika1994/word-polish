@@ -4,6 +4,7 @@ import Header from "./Header";
 import HeroList, { HeroListItem } from "./HeroList";
 import Progress from "./Progress";
 import { OpenAiApi } from "../../services/openai";
+import { useState } from "react";
 
 /* global Word, require */
 
@@ -15,15 +16,20 @@ export interface AppProps {
 export interface AppState {
   listItems: HeroListItem[];
   apiKey: string;
-}
+  levelOfFormat: string;
+  wordCount: string;
+} 
 
 export default class App extends React.Component<AppProps, AppState> {
+
 
   constructor(props, context) {
     super(props, context);
     this.state = {
       listItems: [],
       apiKey: "",
+      levelOfFormat: "",
+      wordCount: "",
     };
   }
 
@@ -55,7 +61,9 @@ export default class App extends React.Component<AppProps, AppState> {
         const word = words.load();
         await context.sync();
         const openai = new OpenAiApi(this.state.apiKey);
-        const converted = await openai.generateText(word.text.trim());
+        const prompt= `Imagine you are a ${this.state.levelOfFormat} and explain: ${word.text.trim()}. Maximum word count limit is ${this.state.wordCount}`;
+       
+        const converted = await openai.generateText(prompt);
 
         words.insertText(converted, "Replace");
 
@@ -104,16 +112,46 @@ export default class App extends React.Component<AppProps, AppState> {
     return (
       <div className="ms-welcome">
         <Header logo={require("./../../../assets/logo-filled.png")} title={this.props.title} message="Welcome" />
+
         <HeroList message="Discover what Office Add-ins can do for you today!" items={this.state.listItems}>
-          <p className="ms-font-l">
-            Add Openai api key, then click <b>Convert</b>.
+          <div style={{ paddingBottom : 10 }}>
+            <p className="ms-font-l">
+              Add Openai api key, then add the instruction click <b>Convert</b>.
+            </p>
+            <div  style={{ paddingBottom : 10, paddingLeft : 40 }}>
+              <input
+                className="ms-input"
+                title="Api Key"
+                style={{ fontSize: "15.rem" }}
+                type="text"
+                onChange={(e) => this.setState({ apiKey: e.target.value })}
+              />
+            </div>
+          </div>
+          <p className="ms-font-l" style={{ paddingBottom : 10 }}>
+            Level of Text Please select.
           </p>
-          <input
-            title="Api Key"
-            style={{ fontSize: "15.rem" }}
-            type="text"
-            onChange={(e) => this.setState({ apiKey: e.target.value })}
-          />
+
+          <div className="dropdown" style={{ width : 100 }}>
+            <select className="dropbtn" onChange={(e) => this.setState({ levelOfFormat: e.target.value })}>
+            <option value="Profasinal">Profasinal Level</option>
+            <option value="Standard">Standard Level</option>
+            <option value="Ordinary level">Ordinary level</option>
+            <option value="10 years old">10 years old</option>
+            </select>
+          </div> 
+          <div style={{ paddingBottom : 10 }}>
+            <p className="ms-font-l" style={{ paddingBottom : 8 }}>
+              Please Input Word Count
+            </p>
+            <input
+              className="ms-input"
+              title="Word Count"
+              style={{ fontSize: "15.rem" }}
+              type="text"
+              onChange={(e) => this.setState({ wordCount: e.target.value })}
+            />
+          </div>
           <DefaultButton className="ms-welcome__action" iconProps={{ iconName: "ChevronRight" }} onClick={this.convert}>
             Convert
           </DefaultButton>
